@@ -27,6 +27,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface CreateStudySetModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenChange: (open: boolean) => void;
   onSubmit: (data: { studySet: Pick<StudySet, 'name' | 'description' | 'folderId'>, vocabularies: Omit<Vocabulary, 'id' | 'studySetId' | 'createdAt'>[] }) => void;
   defaultValues?: { 
     studySet: Pick<StudySet, 'name' | 'description' | 'folderId'>,
@@ -34,33 +35,36 @@ interface CreateStudySetModalProps {
   };
   folders: Folder[];
   isEdit?: boolean;
+  studySet?: StudySet | null;
 }
 
 const CreateStudySetModal: React.FC<CreateStudySetModalProps> = ({ 
   isOpen, 
   onClose, 
+  onOpenChange,
   onSubmit,
   defaultValues,
   folders,
-  isEdit = false
+  isEdit = false,
+  studySet
 }) => {
   const [activeTab, setActiveTab] = useState<string>('manual');
-  const [name, setName] = useState(defaultValues?.studySet.name || '');
-  const [description, setDescription] = useState(defaultValues?.studySet.description || '');
-  const [folderId, setFolderId] = useState(defaultValues?.studySet.folderId || '');
+  const [name, setName] = useState(defaultValues?.studySet.name || studySet?.name || '');
+  const [description, setDescription] = useState(defaultValues?.studySet.description || studySet?.description || '');
+  const [folderId, setFolderId] = useState(defaultValues?.studySet.folderId || studySet?.folderId || '');
   const [vocabularies, setVocabularies] = useState<Omit<Vocabulary, 'studySetId' | 'createdAt'>[]>(
-    defaultValues?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }]
+    defaultValues?.vocabularies || studySet?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }]
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setName(defaultValues?.studySet.name || '');
-      setDescription(defaultValues?.studySet.description || '');
-      setFolderId(defaultValues?.studySet.folderId || '');
-      setVocabularies(defaultValues?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }]);
+      setName(defaultValues?.studySet.name || studySet?.name || '');
+      setDescription(defaultValues?.studySet.description || studySet?.description || '');
+      setFolderId(defaultValues?.studySet.folderId || studySet?.folderId || '');
+      setVocabularies(defaultValues?.vocabularies || studySet?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }]);
     }
-  }, [isOpen, defaultValues]);
+  }, [isOpen, defaultValues, studySet]);
 
   const handleAddVocabulary = () => {
     setVocabularies([...vocabularies, { id: uuidv4(), term: '', definition: '', example: '' }]);

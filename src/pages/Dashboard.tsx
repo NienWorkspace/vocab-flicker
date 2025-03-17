@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { StudySet, Folder } from '@/types';
+import { StudySet, Folder, Vocabulary } from '@/types';
 
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
