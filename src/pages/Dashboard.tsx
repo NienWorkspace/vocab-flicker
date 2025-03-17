@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -263,98 +264,98 @@ const Dashboard: React.FC = () => {
         </header>
         
         <div className="flex justify-between items-center mb-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList>
               <TabsTrigger value="studysets">Study Sets</TabsTrigger>
               <TabsTrigger value="folders">Folders</TabsTrigger>
             </TabsList>
-          </Tabs>
-          
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => setShowCreateFolderModal(true)}
-            >
-              <FolderPlus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Folder</span>
-            </Button>
             
-            <Button 
-              className="flex items-center gap-2"
-              onClick={() => setShowCreateStudySetModal(true)}
-            >
-              <BookPlus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Study Set</span>
-            </Button>
-          </div>
-        </div>
-        
-        <TabsContent value="studysets" className="mt-0">
-          {isLoadingStudySets ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((index) => (
-                <div key={index} className="glassmorphism h-52 rounded-lg animate-pulse" />
-              ))}
-            </div>
-          ) : studySets.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {studySets.map((studySet) => (
-                <StudySetCard 
-                  key={studySet.id} 
-                  studySet={studySet}
-                  onEdit={handleEditStudySet}
-                  onDelete={handleDeleteStudySet}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold mb-2">No study sets yet</h3>
-              <p className="text-gray-500 mb-6">Create your first study set to start learning</p>
+            <div className="flex space-x-2 mt-4">
               <Button 
-                onClick={() => setShowCreateStudySetModal(true)}
-                className="flex items-center gap-2 mx-auto"
-              >
-                <Plus className="w-4 h-4" />
-                Create Study Set
-              </Button>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="folders" className="mt-0">
-          {isLoadingFolders ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((index) => (
-                <div key={index} className="glassmorphism h-52 rounded-lg animate-pulse" />
-              ))}
-            </div>
-          ) : folders.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {folders.map((folder) => (
-                <FolderCard 
-                  key={folder.id} 
-                  folder={folder}
-                  onEdit={handleEditFolder}
-                  onDelete={handleDeleteFolder}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold mb-2">No folders yet</h3>
-              <p className="text-gray-500 mb-6">Organize your study sets with folders</p>
-              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
                 onClick={() => setShowCreateFolderModal(true)}
-                className="flex items-center gap-2 mx-auto"
               >
-                <Plus className="w-4 h-4" />
-                Create Folder
+                <FolderPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">New Folder</span>
+              </Button>
+              
+              <Button 
+                className="flex items-center gap-2"
+                onClick={() => setShowCreateStudySetModal(true)}
+              >
+                <BookPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">New Study Set</span>
               </Button>
             </div>
-          )}
-        </TabsContent>
+            
+            <TabsContent value="studysets" className="mt-0">
+              {isLoadingStudySets ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((index) => (
+                    <div key={index} className="glassmorphism h-52 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : studySets.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {studySets.map((studySet) => (
+                    <StudySetCard 
+                      key={studySet.id} 
+                      studySet={studySet}
+                      onEdit={handleEditStudySet}
+                      onDelete={handleDeleteStudySet}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <h3 className="text-xl font-semibold mb-2">No study sets yet</h3>
+                  <p className="text-gray-500 mb-6">Create your first study set to start learning</p>
+                  <Button 
+                    onClick={() => setShowCreateStudySetModal(true)}
+                    className="flex items-center gap-2 mx-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Study Set
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="folders" className="mt-0">
+              {isLoadingFolders ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((index) => (
+                    <div key={index} className="glassmorphism h-52 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : folders.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {folders.map((folder) => (
+                    <FolderCard 
+                      key={folder.id} 
+                      folder={folder}
+                      onEdit={handleEditFolder}
+                      onDelete={handleDeleteFolder}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <h3 className="text-xl font-semibold mb-2">No folders yet</h3>
+                  <p className="text-gray-500 mb-6">Organize your study sets with folders</p>
+                  <Button 
+                    onClick={() => setShowCreateFolderModal(true)}
+                    className="flex items-center gap-2 mx-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Folder
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
       
       <Footer />
