@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -53,7 +54,7 @@ const CreateStudySetModal: React.FC<CreateStudySetModalProps> = ({
   const [description, setDescription] = useState(defaultValues?.studySet.description || studySet?.description || '');
   const [folderId, setFolderId] = useState(defaultValues?.studySet.folderId || studySet?.folderId || '');
   const [vocabularies, setVocabularies] = useState<Omit<Vocabulary, 'studySetId' | 'createdAt'>[]>(
-    defaultValues?.vocabularies || studySet?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }]
+    defaultValues?.vocabularies || (studySet?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }])
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,7 +63,7 @@ const CreateStudySetModal: React.FC<CreateStudySetModalProps> = ({
       setName(defaultValues?.studySet.name || studySet?.name || '');
       setDescription(defaultValues?.studySet.description || studySet?.description || '');
       setFolderId(defaultValues?.studySet.folderId || studySet?.folderId || '');
-      setVocabularies(defaultValues?.vocabularies || studySet?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }]);
+      setVocabularies(defaultValues?.vocabularies || (studySet?.vocabularies || [{ id: uuidv4(), term: '', definition: '', example: '' }]));
     }
   }, [isOpen, defaultValues, studySet]);
 

@@ -1,4 +1,3 @@
-
 export interface Vocabulary {
   id: string;
   term: string;
@@ -16,6 +15,7 @@ export interface StudySet {
   folderId?: string | null;
   userId: string;
   createdAt: string;
+  vocabularies?: Omit<Vocabulary, 'studySetId' | 'createdAt'>[];
 }
 
 export interface Folder {
