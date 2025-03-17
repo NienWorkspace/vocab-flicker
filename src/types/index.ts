@@ -13,7 +13,7 @@ export interface StudySet {
   name: string;
   description?: string;
   vocabularyCount: number;
-  folderId?: string;
+  folderId?: string | null;
   userId: string;
   createdAt: string;
 }
