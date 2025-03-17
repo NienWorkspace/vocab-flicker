@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -27,14 +26,12 @@ const Dashboard: React.FC = () => {
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [editingStudySet, setEditingStudySet] = useState<StudySet | null>(null);
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!user) {
       navigate('/auth', { replace: true });
     }
   }, [user, navigate]);
 
-  // Fetch study sets
   const {
     data: studySets = [],
     isLoading: isLoadingStudySets,
@@ -59,7 +56,6 @@ const Dashboard: React.FC = () => {
     enabled: !!user
   });
 
-  // Fetch folders
   const {
     data: folders = [],
     isLoading: isLoadingFolders,
@@ -84,7 +80,6 @@ const Dashboard: React.FC = () => {
     enabled: !!user
   });
 
-  // Handle study set deletion
   const handleDeleteStudySet = async (studySet: StudySet) => {
     if (!confirm(`Are you sure you want to delete "${studySet.name}"?`)) return;
     
@@ -104,12 +99,10 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Handle folder deletion
   const handleDeleteFolder = async (folder: Folder) => {
     if (!confirm(`Are you sure you want to delete "${folder.name}"?`)) return;
     
     try {
-      // First check if folder has study sets
       const { data, error: checkError } = await supabase
         .from('study_sets')
         .select('id')
@@ -120,7 +113,6 @@ const Dashboard: React.FC = () => {
       if (data && data.length > 0) {
         if (!confirm(`This folder contains ${data.length} study sets. These will be unlinked from the folder but not deleted. Continue?`)) return;
         
-        // Update study sets to remove folderId
         const { error: updateError } = await supabase
           .from('study_sets')
           .update({ folderId: null })
@@ -129,7 +121,6 @@ const Dashboard: React.FC = () => {
         if (updateError) throw updateError;
       }
       
-      // Delete the folder
       const { error } = await supabase
         .from('folders')
         .delete()
@@ -146,16 +137,119 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Handle edit folder
   const handleEditFolder = (folder: Folder) => {
     setEditingFolder(folder);
     setShowCreateFolderModal(true);
   };
 
-  // Handle edit study set
   const handleEditStudySet = (studySet: StudySet) => {
     setEditingStudySet(studySet);
     setShowCreateStudySetModal(true);
+  };
+
+  const handleFolderSubmit = async (data: Pick<Folder, 'name' | 'description'>) => {
+    try {
+      if (editingFolder) {
+        const { error } = await supabase
+          .from('folders')
+          .update(data)
+          .eq('id', editingFolder.id);
+
+        if (error) throw error;
+        toast.success('Folder updated successfully');
+      } else {
+        const { error } = await supabase
+          .from('folders')
+          .insert({
+            ...data,
+            userId: user?.id,
+            studySetCount: 0,
+          });
+
+        if (error) throw error;
+        toast.success('Folder created successfully');
+      }
+      
+      refetchFolders();
+      setEditingFolder(null);
+    } catch (error) {
+      console.error('Error submitting folder:', error);
+      toast.error('Failed to save folder');
+    }
+  };
+
+  const handleStudySetSubmit = async (data: { 
+    studySet: Pick<StudySet, 'name' | 'description' | 'folderId'>, 
+    vocabularies: Omit<Vocabulary, 'id' | 'studySetId' | 'createdAt'>[] 
+  }) => {
+    try {
+      if (editingStudySet) {
+        const { error } = await supabase
+          .from('study_sets')
+          .update({
+            ...data.studySet,
+            vocabularyCount: data.vocabularies.length
+          })
+          .eq('id', editingStudySet.id);
+
+        if (error) throw error;
+        
+        const { error: deleteError } = await supabase
+          .from('vocabularies')
+          .delete()
+          .eq('studySetId', editingStudySet.id);
+          
+        if (deleteError) throw deleteError;
+        
+        if (data.vocabularies.length > 0) {
+          const { error: insertError } = await supabase
+            .from('vocabularies')
+            .insert(
+              data.vocabularies.map(vocab => ({
+                ...vocab,
+                studySetId: editingStudySet.id,
+              }))
+            );
+            
+          if (insertError) throw insertError;
+        }
+        
+        toast.success('Study set updated successfully');
+      } else {
+        const { data: newStudySet, error } = await supabase
+          .from('study_sets')
+          .insert({
+            ...data.studySet,
+            userId: user?.id,
+            vocabularyCount: data.vocabularies.length,
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        
+        if (data.vocabularies.length > 0) {
+          const { error: insertError } = await supabase
+            .from('vocabularies')
+            .insert(
+              data.vocabularies.map(vocab => ({
+                ...vocab,
+                studySetId: newStudySet.id,
+              }))
+            );
+            
+          if (insertError) throw insertError;
+        }
+        
+        toast.success('Study set created successfully');
+      }
+      
+      refetchStudySets();
+      setEditingStudySet(null);
+    } catch (error) {
+      console.error('Error submitting study set:', error);
+      toast.error('Failed to save study set');
+    }
   };
 
   return (
@@ -265,26 +359,37 @@ const Dashboard: React.FC = () => {
       
       <Footer />
       
-      {/* Modals */}
       <CreateFolderModal 
         isOpen={showCreateFolderModal} 
         onOpenChange={setShowCreateFolderModal}
-        folder={editingFolder}
-        onSuccess={() => {
-          refetchFolders();
+        onClose={() => {
+          setShowCreateFolderModal(false);
           setEditingFolder(null);
         }}
+        onSubmit={handleFolderSubmit}
+        folder={editingFolder}
+        isEdit={!!editingFolder}
       />
       
       <CreateStudySetModal 
         isOpen={showCreateStudySetModal} 
         onOpenChange={setShowCreateStudySetModal}
-        studySet={editingStudySet}
-        folders={folders}
-        onSuccess={() => {
-          refetchStudySets();
+        onClose={() => {
+          setShowCreateStudySetModal(false);
           setEditingStudySet(null);
         }}
+        onSubmit={handleStudySetSubmit}
+        defaultValues={editingStudySet ? {
+          studySet: {
+            name: editingStudySet.name,
+            description: editingStudySet.description,
+            folderId: editingStudySet.folderId || '',
+          },
+          // Vocabularies will be fetched separately
+        } : undefined}
+        studySet={editingStudySet}
+        folders={folders}
+        isEdit={!!editingStudySet}
       />
     </div>
   );

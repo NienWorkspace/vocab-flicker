@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -21,7 +20,7 @@ import {
 import FileUploader from '@/components/ui/FileUploader';
 import { Folder, StudySet, Vocabulary } from '@/types';
 import { BookOpen, Plus } from 'lucide-react';
-import { Tab, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 

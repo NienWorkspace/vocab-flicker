@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Dialog, 
@@ -17,28 +16,32 @@ import { Folder as FolderIcon } from 'lucide-react';
 interface CreateFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenChange: (open: boolean) => void;
   onSubmit: (data: Pick<Folder, 'name' | 'description'>) => void;
   defaultValues?: Pick<Folder, 'name' | 'description'>;
+  folder?: Folder | null;
   isEdit?: boolean;
 }
 
 const CreateFolderModal: React.FC<CreateFolderModalProps> = ({ 
   isOpen, 
   onClose, 
+  onOpenChange,
   onSubmit,
   defaultValues,
+  folder,
   isEdit = false
 }) => {
-  const [name, setName] = React.useState(defaultValues?.name || '');
-  const [description, setDescription] = React.useState(defaultValues?.description || '');
+  const [name, setName] = React.useState(defaultValues?.name || folder?.name || '');
+  const [description, setDescription] = React.useState(defaultValues?.description || folder?.description || '');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
-      setName(defaultValues?.name || '');
-      setDescription(defaultValues?.description || '');
+      setName(defaultValues?.name || folder?.name || '');
+      setDescription(defaultValues?.description || folder?.description || '');
     }
-  }, [isOpen, defaultValues]);
+  }, [isOpen, defaultValues, folder]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +54,7 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="glassmorphism sm:max-w-md animate-scale-in">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
