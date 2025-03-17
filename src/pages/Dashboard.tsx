@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, FolderPlus, BookPlus } from 'lucide-react';
+import { Plus, FolderPlus, BookPlus, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { StudySet, Folder, Vocabulary } from '@/types';
 
 import Navbar from '@/components/layout/Navbar';
@@ -15,6 +14,7 @@ import StudySetCard from '@/components/ui/StudySetCard';
 import FolderCard from '@/components/ui/FolderCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import CreateFolderModal from '@/components/modals/CreateFolderModal';
 import CreateStudySetModal from '@/components/modals/CreateStudySetModal';
 
@@ -26,6 +26,7 @@ const Dashboard: React.FC = () => {
   const [showCreateStudySetModal, setShowCreateStudySetModal] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [editingStudySet, setEditingStudySet] = useState<StudySet | null>(null);
+  const supabaseConfigured = isSupabaseConfigured();
 
   useEffect(() => {
     if (!user) {
@@ -33,14 +34,23 @@ const Dashboard: React.FC = () => {
     }
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (!supabaseConfigured) {
+      toast.error('Supabase is not configured correctly. Please check your environment variables.');
+    }
+  }, []);
+
   const {
     data: studySets = [],
     isLoading: isLoadingStudySets,
+    error: studySetsError,
     refetch: refetchStudySets
   } = useQuery({
     queryKey: ['studySets', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user || !supabaseConfigured) return [];
+      
+      console.log('Fetching study sets for user:', user.id);
       const { data, error } = await supabase
         .from('study_sets')
         .select('*')
@@ -48,23 +58,28 @@ const Dashboard: React.FC = () => {
         .order('createdAt', { ascending: false });
       
       if (error) {
+        console.error('Error fetching study sets:', error);
         toast.error('Failed to load study sets');
         throw error;
       }
       
+      console.log('Fetched study sets:', data);
       return data as StudySet[];
     },
-    enabled: !!user
+    enabled: !!user && supabaseConfigured
   });
 
   const {
     data: folders = [],
     isLoading: isLoadingFolders,
+    error: foldersError,
     refetch: refetchFolders
   } = useQuery({
     queryKey: ['folders', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user || !supabaseConfigured) return [];
+      
+      console.log('Fetching folders for user:', user.id);
       const { data, error } = await supabase
         .from('folders')
         .select('*')
@@ -72,13 +87,15 @@ const Dashboard: React.FC = () => {
         .order('createdAt', { ascending: false });
       
       if (error) {
+        console.error('Error fetching folders:', error);
         toast.error('Failed to load folders');
         throw error;
       }
       
+      console.log('Fetched folders:', data);
       return data as Folder[];
     },
-    enabled: !!user
+    enabled: !!user && supabaseConfigured
   });
 
   const handleDeleteStudySet = async (studySet: StudySet) => {
@@ -149,6 +166,11 @@ const Dashboard: React.FC = () => {
   };
 
   const handleFolderSubmit = async (data: Pick<Folder, 'name' | 'description'>) => {
+    if (!supabaseConfigured) {
+      toast.error('Cannot save folder: Supabase is not configured correctly');
+      return;
+    }
+
     try {
       if (editingFolder) {
         const { error } = await supabase
@@ -183,6 +205,11 @@ const Dashboard: React.FC = () => {
     studySet: Pick<StudySet, 'name' | 'description' | 'folderId'>, 
     vocabularies: Omit<Vocabulary, 'id' | 'studySetId' | 'createdAt'>[] 
   }) => {
+    if (!supabaseConfigured) {
+      toast.error('Cannot save study set: Supabase is not configured correctly');
+      return;
+    }
+
     try {
       if (editingStudySet) {
         const { error } = await supabase
@@ -253,6 +280,41 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  if (!supabaseConfigured) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Configuration Error</AlertTitle>
+            <AlertDescription>
+              Supabase is not configured correctly. Please set your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.
+            </AlertDescription>
+          </Alert>
+          
+          <div className="text-center py-12">
+            <h3 className="text-xl font-semibold mb-4">How to fix this?</h3>
+            <ol className="text-left max-w-md mx-auto space-y-2">
+              <li>1. Create a Supabase project at <a href="https://supabase.com" className="text-primary underline" target="_blank" rel="noopener noreferrer">supabase.com</a></li>
+              <li>2. Get your project URL and anon key from the API settings</li>
+              <li>3. Set the following environment variables in your .env.local file:
+                <pre className="bg-gray-100 p-2 mt-2 rounded text-sm overflow-x-auto">
+                  VITE_SUPABASE_URL=your_supabase_url<br/>
+                  VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+                </pre>
+              </li>
+              <li>4. Restart your development server</li>
+            </ol>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -262,6 +324,16 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold mb-2">My Library</h1>
           <p className="text-gray-600">Manage your study sets and folders</p>
         </header>
+        
+        {(studySetsError || foldersError) && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error loading data</AlertTitle>
+            <AlertDescription>
+              There was a problem loading your content. Please try refreshing the page.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="flex justify-between items-center mb-6">
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -289,7 +361,7 @@ const Dashboard: React.FC = () => {
               </Button>
             </div>
             
-            <TabsContent value="studysets" className="mt-0">
+            <TabsContent value="studysets">
               {isLoadingStudySets ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1, 2, 3, 4, 5, 6].map((index) => (
@@ -322,7 +394,7 @@ const Dashboard: React.FC = () => {
               )}
             </TabsContent>
             
-            <TabsContent value="folders" className="mt-0">
+            <TabsContent value="folders">
               {isLoadingFolders ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1, 2, 3].map((index) => (
